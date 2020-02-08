@@ -48,7 +48,7 @@ for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Restarting scylla-server on instance
 
 sleep 10
 
-CQL="DROP KEYSPACE IF EXISTS ycsb; CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '2'} AND DURABLE_WRITES = true; USE ycsb; DROP TABLE IF EXISTS metrics; CREATE TABLE metrics (metric text, tags text, valuetime timestamp, value double, PRIMARY KEY (metric, tags, valuetime)) WITH CLUSTERING ORDER BY (tags ASC, valuetime ASC);"
+CQL="DROP KEYSPACE IF EXISTS ycsb; CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '2'} AND DURABLE_WRITES = true; USE ycsb; DROP TABLE IF EXISTS metrics; CREATE TABLE metrics (metric text, tags text, valuetime timestamp, value double, PRIMARY KEY ((metric, tags), valuetime)) WITH CLUSTERING ORDER BY (tags ASC, valuetime ASC);"
 echo "Creating keyspace and table for YCSB Timeseries Workload..."
 gcloud compute ssh $PREFIX-scylla-cluster-1 --command="until echo \"$CQL\" | cqlsh \$(hostname -I); do echo \"Scylla not yet up and running, will try again in 2 seconds...\"; sleep 2; done"
 
