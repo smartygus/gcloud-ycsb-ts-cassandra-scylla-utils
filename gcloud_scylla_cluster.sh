@@ -15,7 +15,7 @@ CLUSTER_SIZE=$5
 if gcloud compute snapshots list | grep -q $PREFIX-scylla-cluster-debian-boot-disk; then
   echo "Existing Scylla Cluster Boot Disk Snapshot found, re-using this for new VM..."
   echo "Creating boot disk from snapshot..."
-  gcloud compute disks create $PREFIX-scylla-cluster-1 --source-snapshot $PREFIX-scylla-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)"
+  gcloud compute disks create $PREFIX-scylla-cluster-1 --source-snapshot $PREFIX-scylla-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)" --size=$DISK_SIZE
   echo "Creating instance..."
   gcloud compute instances create $PREFIX-scylla-cluster-1 --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --disk name=$PREFIX-scylla-cluster-1,boot=yes --local-ssd interface=NVME
   echo "Setting auto-delete flag for boot disk on instance..."
@@ -31,7 +31,7 @@ else
 fi
 
 echo "Creating remaining disks and instance for cluster..."
-for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating disk $i"; gcloud compute disks create $PREFIX-scylla-cluster-$i --source-snapshot $PREFIX-scylla-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)"; done
+for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating disk $i"; gcloud compute disks create $PREFIX-scylla-cluster-$i --source-snapshot $PREFIX-scylla-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)" --size=$DISK_SIZE; done
 for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating instance $i"; gcloud compute instances create $PREFIX-scylla-cluster-$i --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --disk name=$PREFIX-scylla-cluster-$i,boot=yes --local-ssd interface=NVME; done
  for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Setting auto delete for boot disk on instance $i"; gcloud compute instances set-disk-auto-delete $PREFIX-scylla-cluster-$i --disk "$PREFIX-scylla-cluster-$i"; done
 

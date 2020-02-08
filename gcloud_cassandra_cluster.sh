@@ -15,7 +15,7 @@ CLUSTER_SIZE=$5
 if gcloud compute snapshots list | grep -q $PREFIX-cassandra-cluster-debian-boot-disk; then
   echo "Existing Cassandra Cluster Boot Disk Snapshot found, re-using this for new VM..."
   echo "Creating boot disk from snapshot..."
-  gcloud compute disks create $PREFIX-cassandra-cluster-1 --source-snapshot $PREFIX-cassandra-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)"
+  gcloud compute disks create $PREFIX-cassandra-cluster-1 --source-snapshot $PREFIX-cassandra-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)" --size=$DISK_SIZE
   echo "Creating instance..."
   gcloud compute instances create $PREFIX-cassandra-cluster-1 --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --disk name=$PREFIX-cassandra-cluster-1,boot=yes --local-ssd interface=NVME
   echo "Setting auto-delete flag for boot disk on instance..."
@@ -25,13 +25,13 @@ else
   echo "Creating instance..."
   gcloud compute instances create $PREFIX-cassandra-cluster-1 --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --boot-disk-size=$DISK_SIZE --boot-disk-type "pd-ssd" --local-ssd interface=NVME --image-project=debian-cloud --image-family=debian-9
   echo "Installing Cassandra..."
-  gcloud compute ssh $PREFIX-cassandra-cluster-1 --command='sudo apt-get install -y openjdk-8-jdk; echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list; curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -; sudo apt-get update; sudo apt-get install -y cassandra'
+  gcloud compute ssh $PREFIX-cassandra-cluster-1 --command='sudo apt-get install -y openjdk-8-jdk xfsprogs; echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list; curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -; sudo apt-get update; sudo apt-get install -y cassandra'
   echo "Creating snapshot of boot disk for later reuse..."
   gcloud compute disks snapshot $PREFIX-cassandra-cluster-1 --snapshot-names=$PREFIX-cassandra-cluster-debian-boot-disk --description="Debian 9 boot disk for Cassandra cluster" --zone="$(gcloud config get-value compute/zone)"
 fi
 
 echo "Creating remaining disks and instance for cluster..."
-for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating disk $i"; gcloud compute disks create $PREFIX-cassandra-cluster-$i --source-snapshot $PREFIX-cassandra-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)"; done
+for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating disk $i"; gcloud compute disks create $PREFIX-cassandra-cluster-$i --source-snapshot $PREFIX-cassandra-cluster-debian-boot-disk --type="pd-ssd" --zone="$(gcloud config get-value compute/zone)" --size=$DISK_SIZE; done
 for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Creating instance $i"; gcloud compute instances create $PREFIX-cassandra-cluster-$i --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --disk name=$PREFIX-cassandra-cluster-$i,boot=yes --local-ssd interface=NVME; done
  for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Setting auto delete for boot disk on instance $i"; gcloud compute instances set-disk-auto-delete $PREFIX-cassandra-cluster-$i --disk "$PREFIX-cassandra-cluster-$i"; done
 
