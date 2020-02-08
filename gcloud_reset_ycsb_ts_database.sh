@@ -8,7 +8,7 @@ PREFIX=$1
 SUT=$2
 CLUSTER_SIZE=$3
 
-CQL="DROP KEYSPACE IF EXISTS ycsb; CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '2'} AND DURABLE_WRITES = true; USE ycsb; DROP TABLE IF EXISTS metrics; CREATE TABLE metrics (metric text, tags text, valuetime timestamp, value double, PRIMARY KEY ((metric, tags), valuetime)) WITH CLUSTERING ORDER BY (tags ASC, valuetime ASC);"
+CQL="DROP KEYSPACE IF EXISTS ycsb; CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '2'} AND DURABLE_WRITES = true; USE ycsb; DROP TABLE IF EXISTS metrics; CREATE TABLE metrics (metric text, tags text, valuetime timestamp, value double, PRIMARY KEY ((metric, tags), valuetime)) WITH CLUSTERING ORDER BY (valuetime ASC);"
 
 for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Checking space used on instance $i"; gcloud compute ssh $PREFIX-$SUT-cluster-$i --command="du -h --max-depth=1 /var/lib/$SUT/data/ycsb"; done
 
