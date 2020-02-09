@@ -25,7 +25,7 @@ else
   echo "Creating instance..."
   gcloud compute instances create $PREFIX-cassandra-cluster-1 --custom-cpu=$VCPU_COUNT --custom-memory=$MEMORY --min-cpu-platform "Intel Skylake" --boot-disk-auto-delete --boot-disk-size=$DISK_SIZE --boot-disk-type "pd-ssd" --local-ssd interface=NVME --image-project=debian-cloud --image-family=debian-9
   echo "Installing Cassandra..."
-  gcloud compute ssh $PREFIX-cassandra-cluster-1 --command='sudo apt-get install -y openjdk-8-jdk xfsprogs; echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list; curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -; sudo apt-get update; sudo apt-get install -y cassandra'
+  gcloud compute ssh $PREFIX-cassandra-cluster-1 --command='sudo apt-get install -y openjdk-8-jdk xfsprogs dstat rsync; echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list; curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -; sudo apt-get update; sudo apt-get install -y cassandra'
   echo "Creating snapshot of boot disk for later reuse..."
   gcloud compute disks snapshot $PREFIX-cassandra-cluster-1 --snapshot-names=$PREFIX-cassandra-cluster-debian-boot-disk --description="Debian 9 boot disk for Cassandra cluster" --zone="$(gcloud config get-value compute/zone)"
 fi

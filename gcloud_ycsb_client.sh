@@ -22,7 +22,7 @@ else
   echo "Creating instance..."
   gcloud compute instances create $PREFIX-ycsb-client --machine-type=$MACHINE_TYPE --min-cpu-platform "Intel Skylake"  --boot-disk-size=$DISK_SIZE --boot-disk-type="pd-ssd" --image-project=debian-cloud --image-family=debian-9
   echo "Installing OpenJDK 8..."
-  gcloud compute ssh $PREFIX-ycsb-client --command='sudo apt-get install -y openjdk-8-jdk'
+  gcloud compute ssh $PREFIX-ycsb-client --command='sudo apt-get install -y openjdk-8-jdk dstat rsync'
 
   echo "Creating snapshot of boot disk for later reuse..."
   gcloud compute disks snapshot $PREFIX-ycsb-client --snapshot-names=$PREFIX-ycsb-client-debian-boot-disk --description="Debian 9 boot disk for YCSB Client" --zone="$(gcloud config get-value compute/zone)"
