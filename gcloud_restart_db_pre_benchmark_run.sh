@@ -28,6 +28,8 @@ for ((i=1; i<=CLUSTER_SIZE; i++)); do
   echo "Starting $SUT on $i"
   if [ "$SUT" = "scylla" ]; then
     gcloud compute ssh $PREFIX-$SUT-cluster-$i --command="sudo systemctl start scylla-server"
+    echo "Waiting 20 seconds after starting the Scylla DB server to give it some time to find itself..."
+    sleep 20
   else
     gcloud compute ssh $PREFIX-$SUT-cluster-$i --command="sudo systemctl start $SUT"
   fi

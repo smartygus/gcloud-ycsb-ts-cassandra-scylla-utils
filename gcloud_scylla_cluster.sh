@@ -42,7 +42,15 @@ for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Running scylla_setup (for remaining 
 
 INSTANCE_IP_ADDRESSES=$(echo $(for ((i=1; i<=CLUSTER_SIZE; i++)); do gcloud compute ssh "$PREFIX-scylla-cluster-$i" --command="echo \"\$(hostname -I | awk '{print \$1}'),\""; done) | tr -d ' ' | sed 's/.$//')
 echo "IP Addresses of all hosts in the cluster --> $INSTANCE_IP_ADDRESSES"
-for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Updating seeds in scylla.yaml with all IP Addresses on instance $i"; gcloud compute ssh $PREFIX-scylla-cluster-$i --command="sudo sed -i -- "/seeds/s/127.0.0.1/$INSTANCE_IP_ADDRESSES/g" /etc/scylla/scylla.yaml"; done
+# Note that on the first instance in the cluster we only set the seeds to its own adddress.
+# This is because Scylla automatically tries to contact another node from the seeds (if there is one) upon
+# startup to check some stuff, and if it can't do this, then it takes ages to start. If all nodes have
+# all addresses and all are restarted at the same time, then none will start up quickly and they'll all
+# not be able to contact each other. So we set one node with the seeds to itself so that it can start
+# quickly and then the others should hopefully be able to reach it and start more quickly as well.
+gcloud compute ssh $PREFIX-scylla-cluster-1 --command="sudo sed -i -- \"/seeds/s/127.0.0.1/\$(hostname -I)/g\" /etc/scylla/scylla.yaml"
+# Set the seeds for the remaining nodes in the cluster to all IPs
+for ((i=2; i<=CLUSTER_SIZE; i++)); do echo "Updating seeds in scylla.yaml with all IP Addresses on instance $i"; gcloud compute ssh $PREFIX-scylla-cluster-$i --command="sudo sed -i -- \"/seeds/s/127.0.0.1/$INSTANCE_IP_ADDRESSES/g\" /etc/scylla/scylla.yaml"; done
 
 for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Restarting scylla-server on instance $i"; gcloud compute ssh $PREFIX-scylla-cluster-$i --command='sudo systemctl restart scylla-server; sleep 2; sudo systemctl status scylla-server'; done
 
