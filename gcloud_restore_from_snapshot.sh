@@ -16,7 +16,7 @@ echo "TABLE_DIRECTORY found -> $TABLE_DIRECTORY"
 
 CQL="CONSISTENCY; CONSISTENCY ALL; TRUNCATE TABLE ycsb.metrics;"
 
-for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Running nodetool status on instance $i"; gcloud compute ssh $PREFIX-$SUT-cluster-$i --command='nodetool status'; done
+for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Running nodetool status ycsb on instance $i"; gcloud compute ssh $PREFIX-$SUT-cluster-$i --command='nodetool status ycsb'; done
 for ((i=1; i<=CLUSTER_SIZE; i++)); do echo "Contents of table data directory (before TRUNCATE) on instance $i"; gcloud compute ssh $PREFIX-$SUT-cluster-$i --command="ls -al /var/lib/$SUT/data/ycsb/$TABLE_DIRECTORY"; done
 echo "Truncating ycsb.metrics table..."
 gcloud compute ssh $PREFIX-$SUT-cluster-1 --command="until cqlsh \$(hostname -I) --execute=\"$CQL\"; do echo \"Cassandra not yet up and running, will try again in 2 seconds...\"; sleep 2; done"
